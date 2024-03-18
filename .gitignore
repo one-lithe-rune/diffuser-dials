@@ -1,0 +1,14 @@
+# Virtual Environment
+.venv
+
+# Compiled and bytecode files
+*.pyc
+*.class
+__pycache__/
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Editor
+.vscode
