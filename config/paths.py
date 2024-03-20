@@ -1,5 +1,4 @@
 import sys
-import os
 
 from pathlib import Path
 from platformdirs import user_config_path, user_pictures_dir
@@ -8,7 +7,7 @@ from datetime import datetime
 ## Application paths
 
 APP_TITLE = "diffuser dials"
-APP_NAME = APP_TITLE.lower()
+APP_NAME = APP_TITLE.lower().replace(" ", "-")
 
 class BasePaths:
     # works for both pyinstaller packaged and not pysintaller packaged
@@ -18,7 +17,8 @@ class BasePaths:
     css: Path = resources / "css"
     js: Path = resources / "js"
     images: Path = resources / "images"
-    theme: Path = css / "theme.css"
+    stylesheet: Path = css / "styles.css"
+    container_stylesheet: Path = css / "container_styles.css"
     workarounds: Path = js / "workarounds.js"
     config_file: Path = Path(user_config_path(APP_NAME)) / "config.json"
     output_dir: Path = Path(user_pictures_dir())

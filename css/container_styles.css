@@ -1,0 +1,11 @@
+/* the css= kwarg in gradio.Blocks only applies to elementw inside 
+   the gradio app container, not the container itself so we have
+   to insert this rule separately using the head= kwarg.
+*/
+
+@media (min-width: 1536px)
+{
+    .gradio-container {
+        min-width: var(--size-full) !important;
+    }
+}
