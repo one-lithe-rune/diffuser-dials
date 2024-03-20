@@ -21,33 +21,6 @@ footer {
     z-index: 1000;
 }
 
-/* Overall sizing */
-
-/* display in full width for desktop devices, but see below */
-/* @media (min-width: 1536px)
-{
-    .gradio-container {
-        max-width: var(--size-full) !important;
-    }
-} */
-
-/* media rules in custom css are don't appear to be applied in
-   gradio versions > 4.7, so we have to define a class which
-   we will manually need add and remove using javascript.
-   Remove this once this fixed in gradio.
-*/
-/* .gradio-container-size-full {
-    max-width: var(--size-full) !important;
-} */
-
-.gradio-container {
-    max-width: var(--size-full) !important;
-}
-
-.gradio-container .contain {
-    padding: 0 var(--size-4) !important;
-}
-
 /* buttons with glyphs */
 
 .output_icon_button {
