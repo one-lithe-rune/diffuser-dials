@@ -33,7 +33,7 @@ if __name__ == "__main__":
         share=False,
         server_name=args.host,
         server_port=args.port,
-        favicon_path=BasePaths.images / "logo-medium.png",
+        favicon_path=BasePaths.images / "logo-icon.png",
         allowed_paths=[BasePaths.output_dir],
         show_api=False,
         inbrowser=True,

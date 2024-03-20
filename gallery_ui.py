@@ -153,7 +153,6 @@ with gr.Blocks() as outputgallery:
     # --- Event handlers
 
     def on_clear_gallery():
-        print("on_clear_gallery")
         return [
             gr.Gallery(
                 value=[],
@@ -168,8 +167,6 @@ with gr.Blocks() as outputgallery:
         return gr.Gallery(columns=columns)
 
     def on_select_subdir(subdir) -> list:
-        print(on_select_subdir)
-
         # evt.value is the subdirectory name
         new_images = outputgallery_filenames(subdir)
         new_label = (
