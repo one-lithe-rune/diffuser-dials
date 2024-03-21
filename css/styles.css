@@ -22,7 +22,6 @@ footer {
 }
 
 /* buttons with glyphs */
-
 .output_icon_button {
     max-width: 30px;
     align-self: end;
@@ -40,11 +39,29 @@ footer {
     overflow: clip auto;
 }
 
+#output_subdir_container {
+    background: var(--block-background-fill);
+}
+
+/* output gallery tab, parameter info dataframe */
+
 .output_parameters_dataframe tbody td {
+    /* make more compact */
     font-size: small;
     line-height: var(--line-xs);
 }
 
-#output_subdir_container {
-    background: var(--block-background-fill);
+.output_parameters_dataframe tbody td:first-child {
+    /* prevents editing of the parameter column */    
+    pointer-events: none;
+}
+
+.output_parameters_dataframe input {
+    /* expands editor for values to fill the whole cell */
+    width: calc(100% - var(--size-4));
+    height: calc(100% - var(--size-4));    
+}
+
+.output_parameters_dataframe input:focus {
+    outline: none;
 }
