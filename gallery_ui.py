@@ -138,7 +138,7 @@ with gr.Blocks() as outputgallery:
             )
 
             with gr.Accordion(
-                label="Parameter Information", open=False
+                label="Parameter Information", open=True
             ) as parameters_accordian:
                 image_parameters = gr.DataFrame(
                     headers=["Parameter", "Value"],
@@ -147,7 +147,8 @@ with gr.Blocks() as outputgallery:
                     wrap=True,
                     elem_classes="output_parameters_dataframe",
                     value=[["Status", "No image selected"]],
-                    interactive=False,
+                    interactive=True,
+                    type="array",
                 )
 
     # --- Event handlers
@@ -347,7 +348,7 @@ with gr.Blocks() as outputgallery:
     subdirectories.select(**clear_gallery).then(
         on_select_subdir,
         [subdirectories],
-        [gallery_files, gallery, logo],
+        [gallery_files, gallery, open_subdir, logo],
         queue=False,
     )
 
@@ -373,6 +374,10 @@ with gr.Blocks() as outputgallery:
         [outputgallery_filename, image_parameters],
         queue=False,
     )
+
+    @image_parameters.input(inputs=image_parameters)
+    def parameters_edited(value: list):
+        print(value)
 
     # outputgallery_filename.change(
     #     on_outputgallery_filename_change,
