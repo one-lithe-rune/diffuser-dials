@@ -1,20 +1,18 @@
 import gradio as gr
 import PIL.Image as Image
 
-from config.paths import BasePaths, APP_NAME
-from config.args import args
-from config.page import head_style
-from gallery_ui import outputgallery, tab_select
+from config import paths, args, head_style, APP_NAME
+from gallery_ui import outputgallery
 
 def ui() -> gr.Blocks:
-    with gr.Blocks(        
-        css=BasePaths.stylesheet,
+    with gr.Blocks(
+        css=paths.stylesheet,
         head=head_style,
         analytics_enabled=False,
         title=APP_NAME,
         delete_cache=(7200, 7200),
     ) as diffuser_dials:
-        logo = Image.open(BasePaths.images / "logo-medium.png")
+        logo = Image.open(paths.images / "logo-medium.png")
         gr.Image(
             value=logo,
             show_label=False,
@@ -33,8 +31,10 @@ if __name__ == "__main__":
         share=False,
         server_name=args.host,
         server_port=args.port,
-        favicon_path=BasePaths.images / "logo-icon.png",
-        allowed_paths=[BasePaths.output_dir],
+        favicon_path=paths.images / "logo-icon.png",
+        allowed_paths=[paths.output_dir],
         show_api=False,
         inbrowser=True,
     )
+else:
+    demo = ui()

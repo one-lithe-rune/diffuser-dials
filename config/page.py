@@ -1,4 +1,4 @@
-from config.paths import BasePaths
+from .args import paths
 
-with open(BasePaths.container_stylesheet, 'r') as file:
+with open(paths.container_stylesheet, 'r') as file:
     head_style = f"<style>\n" + file.read() + "\n</style>"

@@ -1,0 +1,106 @@
+{
+    "name": "stable-diffusion.cpp - CLI",
+    "connection": "CLI",
+    "command": {
+        "win32": "sd.exe",
+        "default": "sd"
+    },
+    "configurable": ["command"],
+    "required": ["--output", "--model"],
+    "argument_map": {
+        "--mode": {
+            "type": "FixedValue" ,
+            "from": "txt2img"
+        },
+        "--prompt": {
+            "type": "ParamStrValue",
+            "from": "Prompt"
+        },
+        "--negative-prompt": {
+            "type": "ParamStrValue",
+            "from": "Negative Prompt"
+        },
+        "--steps": {
+            "type": "ParamUintValue",
+            "from": "Steps",
+            "range": [1, 255]
+        },
+        "--seed": {
+            "type": "ParamIntValue",
+            "from": "Seed"
+        },
+        "--cfg-scale": {
+            "type": "ParamFloat32Value",
+            "from": "CFG Scale"
+        },
+        "--model": {
+            "type": "FullFilePathForceExtension",
+            "base_path": "$checkpoints",
+            "from": "Model",
+            "extensions": ["safetensors"]
+        },
+        "--vae": {
+            "type": "FullFilePathForceExtension",
+            "base_path": "$vaes",
+            "from": "VAE",
+            "extensions": ["safetensors"]
+        },
+        "--embd-dir": {
+            "type": "FullDirPath",
+            "base_path": "$embeddings"
+        },
+        "--lora-model-dir": {
+            "type": "FullDirPath",
+            "base_path": "$loras"
+        },
+        "--output": {
+            "type": "GenerateFilenameFullPath",
+            "base_path": "$output",
+            "extension": "png"
+        },
+        "--height": {
+            "type": "ParamIntValueExtract",
+            "from": "Size",
+            "regex": "^\\d+"
+        },
+        "--width": {
+            "type": "ParamIntValueExtract",
+            "from": "Size",
+            "regex": "x(\\d+)"
+        },
+        "--sampling-method": {
+            "type": "ParamValueExtract",
+            "from": ["Sampler", "Scheduler"],
+            "regex": "^(.+)\\W",
+            "postprocess": "sampler_to_a1111",
+            "limit": [
+                "euler",
+                "euler_a",
+                "heun",
+                "dpm2",
+                "dpm++2s_a",
+                "dpm++2m",
+                "dpm++2mv2",
+                "lcm"
+            ]
+        },
+        "--schedule": {
+            "type": "ParamValueExtract",
+            "from": ["Scheduler", "Sampler"],
+            "postprocess": "scheduler_to_a1111",
+            "regex": "\\W(.+)$",
+            "limit": [
+                "discrete",
+                "karras"
+            ]
+        },
+        "--rng": {
+            "type": "ParamStrValue",
+            "from": "RNG",
+            "limit": [
+                "std_default",
+                "cuda"
+            ]
+        }
+    }
+}

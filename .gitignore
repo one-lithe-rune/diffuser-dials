@@ -1,5 +1,5 @@
 # Virtual Environment
-.venv
+.venv/
 
 # Compiled and bytecode files
 *.pyc
