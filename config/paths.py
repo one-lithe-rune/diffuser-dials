@@ -1,27 +1,50 @@
 import sys
 
 from pathlib import Path
-from platformdirs import user_config_path, user_pictures_dir
-from datetime import datetime
+from typing import Literal
+
+import yaml
+
+#from platformdirs import user_config_path, user_pictures_dir
 
 ## Application paths
+class AppPaths:
+    def __init__(self, app_arguments):
+        # works for both pyinstaller packaged and not pysintaller packaged
+        # make sure you change the .parent clause if you move this file within
+        # the project structure
+        self.resources: Path = Path(getattr(sys, "_MEIPASS", Path(__file__).absolute().parent.parent))
+        self.css: Path = self.resources / "css"
+        self.js: Path = self.resources / "js"
+        self.images: Path = self.resources / "images"
+        self.stylesheet: Path = self.css / "styles.css"
+        self.container_stylesheet: Path = self.css / "container_styles.css"
+        self.workarounds: Path = self.js / "workarounds.js"
+        self.config_dir: Path = Path(app_arguments.config_dir)
+        self.output_dir: Path = Path(app_arguments.output_dir)
+        self.engine_config_dirs: list[Path] = [
+            self.config_dir / "engines",
+            self.resources / "config" / "engines",
+        ]
+        self.models: Path = Path(app_arguments.models)
+        self.checkpoints: Path = Path(app_arguments.checkpoints) if app_arguments.checkpoints else self.models / "checkpoint"
+        self.vaes: Path = Path(app_arguments.vaes) if app_arguments.vaes else self.models / "vae"
+        self.loras: Path = Path(app_arguments.loras) if app_arguments.loras else self.models / "lora"
+        self.embeddings: Path = Path(app_arguments.embeddings) if app_arguments.embeddings else self.models / "embedding"
 
-APP_TITLE = "diffuser dials"
-APP_NAME = APP_TITLE.lower().replace(" ", "-")
+        #print(yaml.dump({f"{k}":f"{v}" for k,v in self.__dict__.items()}))
 
-class BasePaths:
-    # works for both pyinstaller packaged and not pysintaller packaged
-    # make sure you change the .parent clause if you move this file within
-    # the project structure
-    resources: Path = Path(getattr(sys, "_MEIPASS", Path(__file__).absolute().parent.parent))
-    css: Path = resources / "css"
-    js: Path = resources / "js"
-    images: Path = resources / "images"
-    stylesheet: Path = css / "styles.css"
-    container_stylesheet: Path = css / "container_styles.css"
-    workarounds: Path = js / "workarounds.js"
-    config_file: Path = Path(user_config_path(APP_NAME)) / "config.json"
-    output_dir: Path = Path(user_pictures_dir())
+    def for_placeholder(self, placeholder: Literal['$checkpoints', '$vaes', '$loras', '$embeddings']):
+        """Return the path corresponding to a placeholder string"""
+        match placeholder:
+            case '$checkpoints':
+                return self.checkpoints
+            case '$vaes':
+                return self.vaes
+            case '$loras':
+                return self.loras
+            case '$embeddings':
+                return self.embeddings
+            case '$output':
+                return self.output_dir
 
-def dated_output_dir():
-    return BasePaths.output_dir / datetime.now().strftime("%Y%m%d") 

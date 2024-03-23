@@ -3,15 +3,18 @@ import gradio as gr
 import os
 import subprocess
 import sys
+
 from PIL import Image
 
-from config.args import args
-from config.paths import BasePaths, dated_output_dir
+from config import args, paths
 from metadata import displayable_metadata
+
+import runners
 
 # -- Functions for file, directory and image info querying
 
-output_dir = BasePaths.output_dir
+output_dir = paths.output_dir
+available_runners = runners.all()
 
 def outputgallery_filenames(subdir) -> list[str]:
     new_dir_path = os.path.join(output_dir, subdir)
@@ -37,8 +40,8 @@ def output_subdirs() -> list[str]:
 
     # It is less confusing to always including the subdir that will take any
     # images generated today even if it doesn't exist yet
-    if dated_output_dir().relative_to(output_dir) not in relative_paths:
-        relative_paths.append(str(dated_output_dir().relative_to(output_dir)))
+    if "." not in relative_paths:
+        relative_paths.append(".")
 
     # sort subdirectories so that the date named ones we probably
     # created in this or previous sessions come first, sorted with the most
@@ -50,7 +53,7 @@ def output_subdirs() -> list[str]:
         [
             path
             for path in relative_paths
-            if (not path.isnumeric()) and path != "."
+            #if (not path.isnumeric()) and path != "."
         ]
     )
 
@@ -60,7 +63,7 @@ def output_subdirs() -> list[str]:
 # --- Define UI layout for Gradio
 
 with gr.Blocks() as outputgallery:
-    app_logo = Image.open(BasePaths.images / "logo.png")
+    app_logo = Image.open(paths.images / "logo.png")
 
     with gr.Row(elem_id="outputgallery_gallery"):
         # needed to workaround gradio issue:
@@ -136,12 +139,12 @@ with gr.Blocks() as outputgallery:
                 interactive=False,
                 show_copy_button=True,
             )
-
             with gr.Accordion(
                 label="Parameter Information", open=True
             ) as parameters_accordian:
                 image_parameters = gr.DataFrame(
                     headers=["Parameter", "Value"],
+                    datatype=["str", "str"],
                     col_count=(2, "fixed"),
                     row_count=(1, "fixed"),
                     wrap=True,
@@ -150,8 +153,21 @@ with gr.Blocks() as outputgallery:
                     interactive=True,
                     type="array",
                 )
+            with gr.Row():
+                show_command=gr.Button(
+                    value="Show command",
+                )
+                run_command=gr.Button(
+                    value="Run command",
+                )
+
+            command_text=gr.TextArea(
+                value="",
+            )
 
     # --- Event handlers
+
+    # TODO: use decorators to attach these handlers where we don't need to use '.then'
 
     def on_clear_gallery():
         return [
@@ -167,12 +183,16 @@ with gr.Blocks() as outputgallery:
     def on_image_columns_change(columns):
         return gr.Gallery(columns=columns)
 
-    def on_select_subdir(subdir) -> list:
+
+    def on_select_subdir(subdir, request: gr.Request) -> list:
         # evt.value is the subdirectory name
         new_images = outputgallery_filenames(subdir)
         new_label = (
             f"{len(new_images)} images in {os.path.join(output_dir, subdir)}"
         )
+        local_client = request.headers["host"].startswith(
+            "127.0.0.1:"
+        ) or request.headers["host"].startswith("localhost:")
         return [
             new_images,
             gr.Gallery(
@@ -180,11 +200,15 @@ with gr.Blocks() as outputgallery:
                 label=new_label,
                 visible=len(new_images) > 0,
             ),
+            gr.Button(
+                interactive=local_client,
+            ),
             gr.Image(
                 label=new_label,
                 visible=len(new_images) == 0,
             ),
         ]
+
 
     def on_open_subdir(subdir):
         subdir_path = os.path.normpath(os.path.join(output_dir, subdir))
@@ -229,40 +253,25 @@ with gr.Blocks() as outputgallery:
             ),
         ]
 
-    def on_new_image(subdir, subdir_paths, status) -> list:
-        # prevent error triggered when an image generates before the tab
-        # has even been selected
-        subdir_paths = (
-            subdir_paths
-            if len(subdir_paths) > 0
-            else [dated_output_dir().relative_to(output_dir)]
+    def on_new_image(subdir, subdir_paths) -> list:
+        new_images = outputgallery_filenames(subdir)
+        new_label = (
+            f"{len(new_images)} images in "
+            f"{os.path.join(output_dir, subdir)}"
         )
 
-        # only update if the current subdir is the most recent one as
-        # new images only go there
-        if subdir_paths[0] == subdir:
-            new_images = outputgallery_filenames(subdir)
-            new_label = (
-                f"{len(new_images)} images in "
-                f"{os.path.join(output_dir, subdir)} - {status}"
-            )
-
-            return [
-                new_images,
-                gr.Gallery(
-                    value=new_images,
-                    label=new_label,
-                    visible=len(new_images) > 0,
-                ),
-                gr.Image(
-                    label=new_label,
-                    visible=len(new_images) == 0,
-                ),
-            ]
-        else:
-            # otherwise change nothing,
-            # (only untyped gradio gr.update() does this)
-            return [gr.update(), gr.update(), gr.update()]
+        return [
+            new_images,
+            gr.Gallery(
+                value=new_images,
+                label=new_label,
+                visible=len(new_images) > 0,
+            ),
+            gr.Image(
+                label=new_label,
+                visible=len(new_images) == 0,
+            ),
+        ]
 
     def on_select_image(images: list[str], evt: gr.SelectData) -> list:
         # evt.index is an index into the full list of filenames for
@@ -334,6 +343,18 @@ with gr.Blocks() as outputgallery:
                 gr.update(),
             )
 
+    def on_click_run_command(subdir, params):
+        command = list(available_runners.values())[0].get_command(params, subdir)
+        subprocess.run(command)
+        return (
+            command,
+        )
+
+    def on_click_show_command(subdir, params):
+        return (
+            list(available_runners.values())[0].get_command(params, subdir),
+        )
+
     # clearing images when we need to completely change what's in the
     # gallery avoids current images being shown replacing piecemeal and
     # prevents weirdness and errors if the user selects an image during the
@@ -375,49 +396,38 @@ with gr.Blocks() as outputgallery:
         queue=False,
     )
 
-    @image_parameters.input(inputs=image_parameters)
-    def parameters_edited(value: list):
-        print(value)
+    run_command.click(
+        fn=on_click_show_command,
+        inputs=[subdirectories,image_parameters],
+        outputs=[command_text],
+    ).then(
+        fn=on_click_run_command,
+        inputs=[subdirectories,image_parameters],
+        outputs=[command_text]
+    ).then(
+        fn=on_new_image,
+        inputs=[subdirectories, subdirectory_paths],
+        outputs=[gallery_files, gallery, logo],
+        show_progress="none",
+    )
 
-    # outputgallery_filename.change(
-    #     on_outputgallery_filename_change,
-    #     [outputgallery_filename],
-    #     [
-    #         outputgallery_sendto_txt2img,
-    #         outputgallery_sendto_txt2img_sdxl,
-    #         outputgallery_sendto_img2img,
-    #         outputgallery_sendto_inpaint,
-    #         outputgallery_sendto_outpaint,
-    #         outputgallery_sendto_upscaler,
-    #     ],
-    #     queue=False,
-    # )
+    # @image_parameters.input(inputs=image_parameters)
+    # def on_parameters_input(value: list):
+    #     print(value)
 
     # We should have been given the .select function for our tab, so set it up
-    def tab_select(select):
-        select(
-            fn=on_select_tab,
-            inputs=[subdirectory_paths],
-            outputs=[
-                subdirectories,
-                subdirectory_paths,
-                gallery_files,
-                gallery,
-                logo,
-                open_subdir,
-            ],
-            queue=False,
-        )
+    # def tab_select(select):
+    #     select(
+    #         fn=on_select_tab,
+    #         inputs=[subdirectory_paths],
+    #         outputs=[
+    #             subdirectories,
+    #             subdirectory_paths,
+    #             gallery_files,
+    #             gallery,
+    #             logo,
+    #             open_subdir,
+    #         ],
+    #         queue=False,
+    #     )
 
-    # We should have been passed a list of components on other tabs that update
-    # when a new image has generated on that tab, so set things up so the user
-    # will see that new image if they are looking at today's subdirectory
-    # def outputgallery_watch(components: gr.Textbox, queued_components=[]):
-    #     for component in components:
-    #         component.change(
-    #             on_new_image,
-    #             inputs=[subdirectories, subdirectory_paths, component],
-    #             outputs=[gallery_files, gallery, logo],
-    #             queue=component in queued_components,
-    #             show_progress="none",
-    #         )
