@@ -3,6 +3,7 @@ from PIL import Image
 from metadata.png_metadata import parse_generation_parameters
 from metadata.exif_metadata import has_exif, parse_exif
 
+
 def compact(metadata: dict) -> dict:
     # we don't want to alter the original dictionary
     result = dict(metadata)
@@ -13,11 +14,11 @@ def compact(metadata: dict) -> dict:
 
     # make showing the sizes more compact by using only one line each
     if result.keys() & {"Size-1", "Size-2"}:
-        result["Size"] = f"{result.pop('Size-1')}x{result.pop('Size-2')}"
+        result["Size"] = f"{result.pop('Size-2')}x{result.pop('Size-1')}"
     elif result.keys() & {"Height", "Width"}:
         result["Size"] = f"{result.pop('Height')}x{result.pop('Width')}"
 
-    if result.keys() & {"Hires resize-1", "Hires resize-1"}:
+    if result.keys() & {"Hires resize-1", "Hires resize-2"}:
         hires_y = result.pop("Hires resize-1")
         hires_x = result.pop("Hires resize-2")
 
@@ -26,16 +27,8 @@ def compact(metadata: dict) -> dict:
         else:
             result["Hires resize"] = f"{hires_y}x{hires_x}"
 
-    # remove VAE if it exists and is empty
-    if (result.keys() & {"VAE"}) and (
-        not result["VAE"] or result["VAE"] == "None"
-    ):
-        result.pop("VAE")
-
     # remove LoRA if it exists and is empty
-    if (result.keys() & {"LoRA"}) and (
-        not result["LoRA"] or result["LoRA"] == "None"
-    ):
+    if (result.keys() & {"LoRA"}) and (not result["LoRA"] or result["LoRA"] == "None"):
         result.pop("LoRA")
 
     return result
@@ -47,8 +40,8 @@ def displayable_metadata(image_filename: str) -> dict:
 
     pil_image = Image.open(image_filename)
 
-    # we have PNG generation parameters (preferred, as it's what the txt2img dropzone reads,
-    # and we go via that for SendTo, and is directly tied to the image)
+    # we have PNG generation parameters (preferred, as it's what the txt2img
+    # dropzone reads and we go via that for SendTo, and is directly tied to the image)
     if "parameters" in pil_image.info:
         return {
             "source": "png",
@@ -57,7 +50,8 @@ def displayable_metadata(image_filename: str) -> dict:
             ),
         }
 
-    # EXIF data, probably a .jpeg, may well not include parameters, but at least it's *something*
+    # EXIF data, probably a .jpeg, may well not include parameters,
+    # but at least it's *something*
     if has_exif(image_filename):
         return {"source": "exif", "parameters": parse_exif(pil_image)}
 

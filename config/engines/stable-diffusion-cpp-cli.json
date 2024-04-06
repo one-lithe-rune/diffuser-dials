@@ -1,79 +1,102 @@
 {
     "name": "stable-diffusion.cpp - CLI",
     "connection": "CLI",
-    "command": {
+    "commands": {
         "win32": "sd.exe",
         "default": "sd"
     },
-    "configurable": ["command"],
-    "required": ["--output", "--model"],
-    "argument_map": {
-        "--mode": {
-            "type": "FixedValue" ,
-            "from": "txt2img"
+    "parameters": [
+        {
+            "class": "hardcoded",
+            "cli_parameter": "--mode",
+            "source": "txt2img"
         },
-        "--prompt": {
-            "type": "ParamStrValue",
-            "from": "Prompt"
+        {
+            "class": "value",
+            "cli_parameter": "--prompt",
+            "source": "Prompt",
+            "type": "str",
+            "required": true
         },
-        "--negative-prompt": {
-            "type": "ParamStrValue",
-            "from": "Negative Prompt"
+        {
+            "class": "value",
+            "cli_parameter": "--negative-prompt",
+            "source": "Negative prompt",
+            "type": "str"
         },
-        "--steps": {
-            "type": "ParamUintValue",
-            "from": "Steps",
+        {
+            "class": "value",
+            "cli_parameter": "--steps",
+            "source": "Steps",
+            "type": "int",
             "range": [1, 255]
         },
-        "--seed": {
-            "type": "ParamIntValue",
-            "from": "Seed"
+        {
+            "class": "value",
+            "cli_parameter": "--seed",
+            "source": "Seed",
+            "type": "int"
         },
-        "--cfg-scale": {
-            "type": "ParamFloat32Value",
-            "from": "CFG Scale"
+        {
+            "class": "value",
+            "cli_parameter": "--cfg-scale",
+            "source": "CFG Scale",
+            "type": "float"
         },
-        "--model": {
-            "type": "FullFilePathForceExtension",
+        {
+            "class": "file",
+            "cli_parameter": "--model",
+            "source": "Model",
             "base_path": "$checkpoints",
-            "from": "Model",
-            "extensions": ["safetensors"]
+            "extensions": ["safetensors"],
+            "required": true
         },
-        "--vae": {
-            "type": "FullFilePathForceExtension",
+        {
+            "class": "file",
+            "cli_parameter": "--vae",
+            "source": "VAE",
             "base_path": "$vaes",
-            "from": "VAE",
             "extensions": ["safetensors"]
         },
-        "--embd-dir": {
-            "type": "FullDirPath",
-            "base_path": "$embeddings"
+        {
+            "class": "dir",
+            "cli_parameter": "--embd-dir",
+            "source": "$embeddings"
         },
-        "--lora-model-dir": {
-            "type": "FullDirPath",
-            "base_path": "$loras"
+        {
+            "class": "dir",
+            "cli_parameter": "--lora-model-dir",
+            "source": "$loras"
         },
-        "--output": {
-            "type": "GenerateFilenameFullPath",
+        {
+            "class": "file",
+            "cli_parameter": "--output",
             "base_path": "$output",
-            "extension": "png"
+            "source": "$output",
+            "generate": true,
+            "required": true,
+            "extensions": "png"
         },
-        "--height": {
-            "type": "ParamIntValueExtract",
-            "from": "Size",
+        {
+            "class": "extract",
+            "cli_parameter": "--height",
+            "source": "Size",
+            "type": "int",
             "regex": "^\\d+"
         },
-        "--width": {
-            "type": "ParamIntValueExtract",
-            "from": "Size",
+        {
+            "class": "extract",
+            "cli_parameter": "--width",
+            "source": "Size",
+            "type": "int",
             "regex": "x(\\d+)"
         },
-        "--sampling-method": {
-            "type": "ParamValueExtract",
-            "from": ["Sampler", "Scheduler"],
+        {
+            "class": "extract",
+            "cli_parameter": "--sampling-method",
+            "source": "Sampler",
             "regex": "^(.+)\\W",
-            "postprocess": "sampler_to_a1111",
-            "limit": [
+            "one_of": [
                 "euler",
                 "euler_a",
                 "heun",
@@ -84,23 +107,31 @@
                 "lcm"
             ]
         },
-        "--schedule": {
-            "type": "ParamValueExtract",
-            "from": ["Scheduler", "Sampler"],
-            "postprocess": "scheduler_to_a1111",
-            "regex": "\\W(.+)$",
-            "limit": [
+        {
+            "class": "extract",
+            "cli_parameter": "--schedule",
+            "source": "Sampler",
+            "regex": "\\b\\S+\\s+(\\S+)",
+            "one_of": [
                 "discrete",
                 "karras"
             ]
         },
-        "--rng": {
-            "type": "ParamStrValue",
-            "from": "RNG",
-            "limit": [
+        {
+            "class": "value",
+            "cli_parameter": "--rng",
+            "source": "RNG",
+            "type": "str",
+            "one_of": [
                 "std_default",
                 "cuda"
             ]
+        },
+        {
+            "class": "value",
+            "cli_parameter": "--clip-skip",
+            "source": "Clip skip",
+            "type": "int"
         }
-    }
+    ]
 }
