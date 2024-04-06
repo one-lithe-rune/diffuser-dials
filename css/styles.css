@@ -31,7 +31,17 @@ footer {
 
 /* output gallery tab */
 #outputgallery_gallery .fixed-height {
-    min-height: 89vh !important;
+    /* min-height: 90vh !important; */
+    min-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
+}
+
+.sd-right-panel {
+    height: calc(100vmin - var(--size-24)) !important;
+    overflow-y: scroll;
+}
+
+.sd-right-panel .fill {
+    flex: 1;
 }
 
 .output_parameters_dataframe table.table {
@@ -52,14 +62,14 @@ footer {
 }
 
 .output_parameters_dataframe tbody td:first-child {
-    /* prevents editing of the parameter column */    
+    /* prevents editing of the parameter column */
     pointer-events: none;
 }
 
 .output_parameters_dataframe input {
     /* expands editor for values to fill the whole cell */
     width: calc(100% - var(--size-4));
-    height: calc(100% - var(--size-4));    
+    height: calc(100% - var(--size-4));
 }
 
 .output_parameters_dataframe input:focus {

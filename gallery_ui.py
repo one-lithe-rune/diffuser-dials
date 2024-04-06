@@ -16,12 +16,12 @@ import runners
 output_dir = paths.output_dir
 available_runners = runners.all()
 
+
 def outputgallery_filenames(subdir) -> list[str]:
     new_dir_path = os.path.join(output_dir, subdir)
     if os.path.exists(new_dir_path):
         filenames = [
-            glob.glob(new_dir_path + "/" + ext)
-            for ext in ("*.png", "*.jpg", "*.jpeg")
+            glob.glob(new_dir_path + "/" + ext) for ext in ("*.png", "*.jpg", "*.jpeg")
         ]
 
         return sorted(sum(filenames, []), key=os.path.getmtime, reverse=True)
@@ -33,9 +33,7 @@ def output_subdirs() -> list[str]:
     # Gets a list of subdirectories of output_dir and below, as relative paths.
     relative_paths = [
         os.path.relpath(entry[0], output_dir)
-        for entry in os.walk(
-            output_dir, followlinks=args.followlinks
-        )
+        for entry in os.walk(output_dir, followlinks=args.followlinks)
     ]
 
     # It is less confusing to always including the subdir that will take any
@@ -53,7 +51,7 @@ def output_subdirs() -> list[str]:
         [
             path
             for path in relative_paths
-            #if (not path.isnumeric()) and path != "."
+            # if (not path.isnumeric()) and path != "."
         ]
     )
 
@@ -90,6 +88,7 @@ with gr.Blocks() as outputgallery:
                 visible=False,
                 show_label=True,
                 columns=4,
+                object_fit="contain",
             )
 
         with gr.Column(scale=4):
@@ -154,16 +153,39 @@ with gr.Blocks() as outputgallery:
                     type="array",
                 )
             with gr.Row():
-                show_command=gr.Button(
-                    value="Show command",
-                )
-                run_command=gr.Button(
-                    value="Run command",
-                )
-
-            command_text=gr.TextArea(
-                value="",
-            )
+                with gr.Column(scale=3):
+                    runner = gr.Dropdown(
+                        show_label=False,
+                        container=False,
+                        scale=2,
+                        min_width=120,
+                        label="Using",
+                        choices=available_runners.keys(),
+                        value=list(available_runners.keys())[0],
+                    )
+                with gr.Column(scale=2, min_width=120):
+                    seed_type = (
+                        gr.Dropdown(
+                            show_label=False,
+                            container=False,
+                            scale=1,
+                            label="With Seed",
+                            choices=[
+                                "Random seed",
+                                "Current seed",
+                                "Next seed",
+                                "Previous seed",
+                            ],
+                            value="Random seed",
+                            interactive=True,
+                        ),
+                    )
+                with gr.Column(scale=1, min_width=120):
+                    run_command = gr.Button(
+                        value="Generate",
+                        size="sm",
+                        variant="secondary",
+                    )
 
     # --- Event handlers
 
@@ -183,13 +205,10 @@ with gr.Blocks() as outputgallery:
     def on_image_columns_change(columns):
         return gr.Gallery(columns=columns)
 
-
     def on_select_subdir(subdir, request: gr.Request) -> list:
         # evt.value is the subdirectory name
         new_images = outputgallery_filenames(subdir)
-        new_label = (
-            f"{len(new_images)} images in {os.path.join(output_dir, subdir)}"
-        )
+        new_label = f"{len(new_images)} images in {os.path.join(output_dir, subdir)}"
         local_client = request.headers["host"].startswith(
             "127.0.0.1:"
         ) or request.headers["host"].startswith("localhost:")
@@ -208,7 +227,6 @@ with gr.Blocks() as outputgallery:
                 visible=len(new_images) == 0,
             ),
         ]
-
 
     def on_open_subdir(subdir):
         subdir_path = os.path.normpath(os.path.join(output_dir, subdir))
@@ -233,8 +251,7 @@ with gr.Blocks() as outputgallery:
         )
         new_images = outputgallery_filenames(new_subdir)
         new_label = (
-            f"{len(new_images)} images in "
-            f"{os.path.join(output_dir, new_subdir)}"
+            f"{len(new_images)} images in " f"{os.path.join(output_dir, new_subdir)}"
         )
 
         return [
@@ -244,20 +261,17 @@ with gr.Blocks() as outputgallery:
             ),
             refreshed_subdirs,
             new_images,
-            gr.Gallery(
-                value=new_images, label=new_label, visible=len(new_images) > 0
-            ),
+            gr.Gallery(value=new_images, label=new_label, visible=len(new_images) > 0),
             gr.Image(
                 label=new_label,
                 visible=len(new_images) == 0,
             ),
         ]
 
-    def on_new_image(subdir, subdir_paths) -> list:
+    def on_new_image(subdir) -> list:
         new_images = outputgallery_filenames(subdir)
         new_label = (
-            f"{len(new_images)} images in "
-            f"{os.path.join(output_dir, subdir)}"
+            f"{len(new_images)} images in " f"{os.path.join(output_dir, subdir)}"
         )
 
         return [
@@ -343,17 +357,20 @@ with gr.Blocks() as outputgallery:
                 gr.update(),
             )
 
-    def on_click_run_command(subdir, params):
-        command = list(available_runners.values())[0].get_command(params, subdir)
-        subprocess.run(command)
-        return (
-            command,
-        )
+    def on_click_run_command(runner, subdir, params):
+        try:
+            command = list(
+                available_runners[runner].get_command(params, {"subdir": subdir})
+            )
+            print(command)
+            subprocess.run(command)
+        except ValueError as e:
+            gr.Error(e)
+
+        return on_new_image(subdir)
 
     def on_click_show_command(subdir, params):
-        return (
-            list(available_runners.values())[0].get_command(params, subdir),
-        )
+        return (list(available_runners.values())[0].get_command(params, subdir),)
 
     # clearing images when we need to completely change what's in the
     # gallery avoids current images being shown replacing piecemeal and
@@ -397,37 +414,8 @@ with gr.Blocks() as outputgallery:
     )
 
     run_command.click(
-        fn=on_click_show_command,
-        inputs=[subdirectories,image_parameters],
-        outputs=[command_text],
-    ).then(
         fn=on_click_run_command,
-        inputs=[subdirectories,image_parameters],
-        outputs=[command_text]
-    ).then(
-        fn=on_new_image,
-        inputs=[subdirectories, subdirectory_paths],
+        inputs=[runner, subdirectories, image_parameters],
         outputs=[gallery_files, gallery, logo],
-        show_progress="none",
+        show_progress="minimal",
     )
-
-    # @image_parameters.input(inputs=image_parameters)
-    # def on_parameters_input(value: list):
-    #     print(value)
-
-    # We should have been given the .select function for our tab, so set it up
-    # def tab_select(select):
-    #     select(
-    #         fn=on_select_tab,
-    #         inputs=[subdirectory_paths],
-    #         outputs=[
-    #             subdirectories,
-    #             subdirectory_paths,
-    #             gallery_files,
-    #             gallery,
-    #             logo,
-    #             open_subdir,
-    #         ],
-    #         queue=False,
-    #     )
-
