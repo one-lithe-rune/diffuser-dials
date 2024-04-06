@@ -96,7 +96,7 @@ gradio==4.22.0
     kiwisolver==1.4.5
     numpy==1.26.4
     packaging==24.0
-    pillow==10.2.0
+    pillow==10.3.0
     pyparsing==3.1.2
     python-dateutil==2.9.0.post0
       six==1.16.0
@@ -109,7 +109,7 @@ gradio==4.22.0
       six==1.16.0
     pytz==2024.1
     tzdata==2024.1
-  pillow==10.2.0
+  pillow==10.3.0
   pydantic==2.6.4
     annotated-types==0.6.0
     pydantic_core==2.16.3
