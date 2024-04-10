@@ -71,7 +71,7 @@ with gr.Blocks() as outputgallery:
         gallery_files = gr.State(value=[])
         subdirectory_paths = gr.State(value=output_subdirs())
 
-        with gr.Column(scale=6):
+        with gr.Column(scale=6, min_width=640):
             logo = gr.Image(
                 label="No Images",
                 value=app_logo,
@@ -87,11 +87,11 @@ with gr.Blocks() as outputgallery:
                 value=gallery_files.value,
                 visible=False,
                 show_label=True,
-                columns=4,
+                columns=2,
                 object_fit="contain",
             )
 
-        with gr.Column(scale=4):
+        with gr.Column(scale=4, elem_classes=["right-panel"], min_width=240):
             with gr.Group():
                 with gr.Row(elem_id="output_subdir_container"):
                     with gr.Column(
@@ -130,7 +130,7 @@ with gr.Blocks() as outputgallery:
                         )
 
             image_columns = gr.Slider(
-                label="Columns shown", value=4, minimum=1, maximum=16, step=1
+                label="Columns shown", value=2, minimum=1, maximum=10, step=1
             )
             outputgallery_filename = gr.Textbox(
                 label="Filename",
@@ -142,17 +142,18 @@ with gr.Blocks() as outputgallery:
                 label="Parameter Information", open=True
             ) as parameters_accordian:
                 image_parameters = gr.DataFrame(
+                    elem_classes=["output_parameters_dataframe"],
+                    height=600,
                     headers=["Parameter", "Value"],
                     datatype=["str", "str"],
                     col_count=(2, "fixed"),
                     row_count=(1, "fixed"),
                     wrap=True,
-                    elem_classes="output_parameters_dataframe",
                     value=[["Status", "No image selected"]],
                     interactive=True,
                     type="array",
                 )
-            with gr.Row():
+            with gr.Row(elem_classes=["end-fill"]):
                 with gr.Column(scale=3):
                     runner = gr.Dropdown(
                         show_label=False,

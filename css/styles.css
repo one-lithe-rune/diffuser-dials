@@ -21,6 +21,21 @@ footer {
     z-index: 1000;
 }
 
+/* centered logo for when there are no images */
+#top_logo.logo_centered {
+    height: 100%;
+    width: 100%;
+    background-color: var(--background-fill-secondary);
+}
+
+#top_logo.logo_centered img {
+    object-fit: scale-down;
+    position: absolute;
+    width: 80%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 /* buttons with glyphs */
 .output_icon_button {
     max-width: 30px;
@@ -35,13 +50,15 @@ footer {
     min-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
 }
 
-.sd-right-panel {
-    height: calc(100vmin - var(--size-24)) !important;
+.right-panel {
+    min-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
     overflow-y: scroll;
 }
 
-.sd-right-panel .fill {
-    flex: 1;
+.right-panel .end-fill {
+    flex-grow: 1;
+    align-content: flex-end;
+    align-items: last baseline;
 }
 
 .output_parameters_dataframe table.table {
