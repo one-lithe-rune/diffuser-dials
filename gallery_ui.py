@@ -164,21 +164,19 @@ with gr.Blocks() as outputgallery:
                         value=list(available_runners.keys())[0],
                     )
                 with gr.Column(scale=2, min_width=120):
-                    seed_type = (
-                        gr.Dropdown(
-                            show_label=False,
-                            container=False,
-                            scale=1,
-                            label="With Seed",
-                            choices=[
-                                "Random seed",
-                                "Current seed",
-                                "Next seed",
-                                "Previous seed",
-                            ],
-                            value="Random seed",
-                            interactive=True,
-                        ),
+                    seed_type = gr.Dropdown(
+                        show_label=False,
+                        container=False,
+                        scale=1,
+                        label="With Seed",
+                        choices=[
+                            "Random seed",
+                            "Current seed",
+                            "Next seed",
+                            "Previous seed",
+                        ],
+                        value="Random seed",
+                        interactive=True,
                     )
                 with gr.Column(scale=1, min_width=120):
                     run_command = gr.Button(
@@ -357,15 +355,35 @@ with gr.Blocks() as outputgallery:
                 gr.update(),
             )
 
+    def on_click_update_seed(seed_type, params):
+        input_dict = dict(params)
+        try:
+            seed = int(input_dict["Seed"])
+        except (KeyError, ValueError):
+            seed = -1
+
+        if seed_type == "Random seed":
+            seed = -1
+        elif seed_type == "Next seed" and not (int(seed) < 0):
+            seed = int(seed) + 1
+        elif seed_type == "Previous seed" and not (int(seed) < 0):
+            seed = int(seed) - 1
+
+        input_dict["Seed"] = seed
+
+        return [[key, value] for key, value in input_dict.items()]
+
     def on_click_run_command(runner, subdir, params):
+        input_dict = dict(params)
+
         try:
             command = list(
-                available_runners[runner].get_command(params, {"subdir": subdir})
+                available_runners[runner].get_command(input_dict, {"subdir": subdir})
             )
             print(command)
             subprocess.run(command)
         except ValueError as e:
-            gr.Error(e)
+            raise gr.Error(e)
 
         return on_new_image(subdir)
 
@@ -414,8 +432,17 @@ with gr.Blocks() as outputgallery:
     )
 
     run_command.click(
-        fn=on_click_run_command,
+        on_click_update_seed,
+        inputs=[seed_type, image_parameters],
+        outputs=[image_parameters],
+        queue=False,
+    ).then(
+        on_click_run_command,
         inputs=[runner, subdirectories, image_parameters],
-        outputs=[gallery_files, gallery, logo],
+        outputs=[
+            gallery_files,
+            gallery,
+            logo,
+        ],
         show_progress="minimal",
     )

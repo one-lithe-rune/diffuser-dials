@@ -85,7 +85,7 @@ class CliParameter(ABC):
 
     @abstractmethod
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
         """Answers a tuple to include in the command line arguments sent to
         a command line generation tool for the passed input_parameters."""
@@ -94,7 +94,7 @@ class CliParameter(ABC):
 
 class CliParameterHardCoded(CliParameter):
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
         return (
             self._cli_parameter,
@@ -155,9 +155,9 @@ class CliParameterValue(CliParameter):
             raise ConfigDefinitionError(f"'{self._one_of}' is not a list definition")
 
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
-        input_dict = dict_key_lower(dict(input_parameters))
+        input_dict = dict_key_lower(input_parameters)
         result = input_dict.get(self._source, None)
 
         # answer an empty tuple when we don't have a value but its not required
@@ -196,9 +196,9 @@ class CliParameterExtract(CliParameterValue):
         self._regex = entry["regex"]
 
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
-        input_dict = dict_key_lower(dict(input_parameters))
+        input_dict = dict_key_lower(input_parameters)
         result = input_dict.get(self._source, None)
 
         # answer an empty tuple when we don't have a value but its not required
@@ -239,7 +239,7 @@ class CliParameterDir(CliParameter):
     """
 
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
         result = paths.for_placeholder(self._source)
 
@@ -276,9 +276,9 @@ class CliParameterFile(CliParameter):
         self._generate = entry.get("generate", None)
 
     def for_cli(
-        self, input_parameters: list[list[str]], ui_inputs: dict[str, object]
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
-        input_dict = dict_key_lower(dict(input_parameters))
+        input_dict = dict_key_lower(input_parameters)
 
         if self._generate is not None:
             # TODO: improve what is generated for the file name
@@ -389,7 +389,7 @@ class CliRunner:
                 continue
 
     def get_command(
-        self, inputs: list[list], ui_inputs: dict[str, object]
+        self, inputs: dict[str, str], ui_inputs: dict[str, object]
     ) -> list[str]:
         result = []
         for parameter in self._parameters:
