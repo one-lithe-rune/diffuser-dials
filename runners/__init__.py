@@ -4,11 +4,11 @@ import inspect
 
 from pathlib import Path
 
-from runners.cli import CliRunner
+from runners.cli import Runner, CliRunner
 from config import paths
 
 
-def all(config_dirs: list[Path] = paths.engine_config_dirs) -> dict[str, object]:
+def all(config_dirs: list[Path] = paths.engine_config_dirs) -> dict[str, Runner]:
     config_files = []
     for dir in config_dirs:
         config_files.extend(dir.glob("*.json"))
