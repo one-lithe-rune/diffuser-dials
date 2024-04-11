@@ -9,39 +9,50 @@
         {
             "class": "hardcoded",
             "cli_parameter": "--mode",
-            "source": "txt2img"
+            "source": "txt2img",
+            "displayable": false
         },
         {
             "class": "value",
             "cli_parameter": "--prompt",
             "source": "Prompt",
             "type": "str",
-            "required": true
+            "required": true,
+            "default": "A closeup of the front panel, filled with subtly coloured sleek dials switches and knobs, of an old style image generation machine. An example of excellent classic user-centric tactile design. On stage unveiling of the restoration in perfect focus.",
+            "displayable": true
         },
         {
             "class": "value",
             "cli_parameter": "--negative-prompt",
             "source": "Negative prompt",
-            "type": "str"
+            "type": "str",
+            "default": "distorted image",
+            "displayable": true
         },
         {
             "class": "value",
             "cli_parameter": "--steps",
             "source": "Steps",
             "type": "int",
-            "range": [1, 255]
+            "range": [1, 255],
+            "default": 32,
+            "displayable": true
         },
         {
             "class": "value",
             "cli_parameter": "--seed",
             "source": "Seed",
-            "type": "int"
+            "type": "int",
+            "default": -1,
+            "displayable": true
         },
         {
             "class": "value",
             "cli_parameter": "--cfg-scale",
             "source": "CFG Scale",
-            "type": "float"
+            "type": "float",
+            "default": 7.5,
+            "displayable": true
         },
         {
             "class": "file",
@@ -49,24 +60,28 @@
             "source": "Model",
             "base_path": "$checkpoints",
             "extensions": ["safetensors"],
-            "required": true
+            "required": true,
+            "displayable": true
         },
         {
             "class": "file",
             "cli_parameter": "--vae",
             "source": "VAE",
             "base_path": "$vaes",
-            "extensions": ["safetensors"]
+            "extensions": ["safetensors"],
+            "displayable": true
         },
         {
             "class": "dir",
             "cli_parameter": "--embd-dir",
-            "source": "$embeddings"
+            "source": "$embeddings",
+            "displayable": false
         },
         {
             "class": "dir",
             "cli_parameter": "--lora-model-dir",
-            "source": "$loras"
+            "source": "$loras",
+            "displayable": false
         },
         {
             "class": "file",
@@ -75,7 +90,8 @@
             "source": "$output",
             "generate": true,
             "required": true,
-            "extensions": "png"
+            "extensions": "png",
+            "displayable": false
         },
         {
             "class": "extract",
@@ -92,6 +108,11 @@
             "regex": "x(\\d+)"
         },
         {
+            "class": "display",
+            "source": "Size",
+            "default": "512x512"
+        },
+        {
             "class": "extract",
             "cli_parameter": "--sampling-method",
             "source": "Sampler",
@@ -105,7 +126,8 @@
                 "dpm++2m",
                 "dpm++2mv2",
                 "lcm"
-            ]
+            ],
+            "displayable": false
         },
         {
             "class": "extract",
@@ -115,7 +137,13 @@
             "one_of": [
                 "discrete",
                 "karras"
-            ]
+            ],
+            "displayable": false
+        },
+        {
+            "class": "display",
+            "source": "Sampler",
+            "default": "euler_a karras"
         },
         {
             "class": "value",
@@ -125,13 +153,17 @@
             "one_of": [
                 "std_default",
                 "cuda"
-            ]
+            ],
+            "default": "cuda",
+            "displayable": true
         },
         {
             "class": "value",
             "cli_parameter": "--clip-skip",
             "source": "Clip skip",
-            "type": "int"
+            "type": "int",
+            "default": 1,
+            "displayable": true
         }
     ]
 }

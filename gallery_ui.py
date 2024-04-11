@@ -58,6 +58,13 @@ def output_subdirs() -> list[str]:
     return result_paths
 
 
+def get_default_params(runner: runners.Runner = None) -> list[list]:
+    if runner:
+        return runner.get_defaults()
+    else:
+        return list(available_runners.items())[0][1].get_defaults()
+
+
 # --- Define UI layout for Gradio
 
 with gr.Blocks() as outputgallery:
@@ -138,18 +145,20 @@ with gr.Blocks() as outputgallery:
                 interactive=False,
                 show_copy_button=True,
             )
+
             with gr.Accordion(
                 label="Parameter Information", open=True
             ) as parameters_accordian:
+                default_params = get_default_params()
                 image_parameters = gr.DataFrame(
                     elem_classes=["output_parameters_dataframe"],
                     height=600,
                     headers=["Parameter", "Value"],
                     datatype=["str", "str"],
                     col_count=(2, "fixed"),
-                    row_count=(1, "fixed"),
+                    row_count=(len(default_params), "fixed"),
                     wrap=True,
-                    value=[["Status", "No image selected"]],
+                    value=default_params,
                     interactive=True,
                     type="array",
                 )
@@ -286,7 +295,9 @@ with gr.Blocks() as outputgallery:
             ),
         ]
 
-    def on_select_image(images: list[str], evt: gr.SelectData) -> list:
+    def on_select_image(
+        images: list[str], runner: runners.Runner, evt: gr.SelectData
+    ) -> list:
         # evt.index is an index into the full list of filenames for
         # the current subdirectory
         filename = images[evt.index]
@@ -310,7 +321,7 @@ with gr.Blocks() as outputgallery:
         return [
             filename,
             gr.DataFrame(
-                value=[["Status", "No parameters found"]],
+                value=default_params(runner),
                 row_count=(1, "fixed"),
             ),
         ]
@@ -427,7 +438,7 @@ with gr.Blocks() as outputgallery:
 
     gallery.select(
         on_select_image,
-        [gallery_files],
+        [gallery_files, runner],
         [outputgallery_filename, image_parameters],
         queue=False,
     )

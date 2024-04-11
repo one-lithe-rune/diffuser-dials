@@ -47,6 +47,7 @@ class CliParameter(ABC):
     def __init__(self: type, entry: dict[str, object]):
         self._png_parameter = entry.get("png_parameter", None)
         self._required = entry.get("required", False)
+        self._default = entry.get("default", "")
         self._displayable = entry.get("displayable", True)
         self._editable = entry.get("editable", True)
         try:
@@ -56,7 +57,8 @@ class CliParameter(ABC):
                 f"The config entry {entry} is missing a 'cli_parameter' property"
             )
         try:
-            self._source = entry["source"].lower()
+            self._display_source = entry["source"]
+            self._source = self._display_source.lower()
         except KeyError:
             raise ConfigDefinitionError(
                 f"The config entry {entry} is missing a 'source' property"
@@ -83,6 +85,14 @@ class CliParameter(ABC):
         """
         return None
 
+    def for_default_display(self) -> tuple[str, str | int | float]:
+        """Answers a tuple to include in the parameters to display as default
+        when no image is selected"""
+        if self._displayable:
+            return (self._display_source, self._default)
+        else:
+            return ()
+
     @abstractmethod
     def for_cli(
         self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
@@ -90,6 +100,47 @@ class CliParameter(ABC):
         """Answers a tuple to include in the command line arguments sent to
         a command line generation tool for the passed input_parameters."""
         pass
+
+
+class CliParameterDisplay:
+    """Class for Config Parameters that will be displayed but will not
+    be directly passed to a the command line generation tool. Use this
+    when you have extracted parameters and you want to display where they
+    are extracted from as part of the default parameter set.
+    """
+
+    def __init__(self: type, entry: dict[str, object]):
+        self._required = entry.get("required", False)
+        self._default = entry.get("default", "")
+        self._editable = entry.get("editable", True)
+        try:
+            self._source = entry["source"]
+        except KeyError:
+            raise ConfigDefinitionError(
+                f"The config entry {entry} is missing a 'source' property"
+            )
+
+    @property
+    def required(self) -> bool:
+        """answer whether the parameter is required to have a value"""
+        return self._required
+
+    @property
+    def displayable(self) -> bool:
+        """answer whether the parameter should be displayed in the UI"""
+        return True
+
+    def for_default_display(self):
+        """Answers a tuple to include in the parameters to display as default
+        when no image is selected"""
+        return (self._source, self._default)
+
+    def for_cli(
+        self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
+    ) -> tuple[str, str]:
+        """Answers an empty tuple that will not effect what will be sent
+        to the generation tool."""
+        return ()
 
 
 class CliParameterHardCoded(CliParameter):
@@ -188,6 +239,10 @@ class CliParameterExtract(CliParameterValue):
 
     def __init__(self: type, entry: dict[str, object]):
         super().__init__(entry)
+        # since we're extracting from something that is presumably displayed
+        # it doesn't make sense to display the extract value too
+        self._displayable = False
+
         if "regex" not in entry:
             raise ConfigDefinitionError(
                 f"The config entry {entry} is missing a 'regex' property"
@@ -275,6 +330,30 @@ class CliParameterFile(CliParameter):
         )
         self._generate = entry.get("generate", None)
 
+    def for_default_display(self):
+        """If displayable answers the first file name, matching the first
+        extension in folder specified by base_path. Other wise"""
+
+        if self._displayable:
+            if self._base_path is not None:
+                path: Path = paths.for_placeholder(self._base_path) / self._default
+            else:
+                path: Path = Path(self._default)
+
+            # TODO: Not sure these case shenanigans are necssary or working
+            glob = f"*{self._extensions[0]}" if self._extensions is not None else "*"
+            re_flag = re.IGNORECASE if not self._case_sensitive else 0
+
+            regex = re.compile(fnmatch.translate(str(glob)), re_flag)
+            try:
+                files = [file for file in os.listdir(str(path)) if regex.match(file)]
+            except OSError:
+                files = []
+
+            return (self._display_source, Path(files[0]).name if len(files) > 0 else "")
+
+        return ()
+
     def for_cli(
         self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
@@ -337,7 +416,20 @@ class CliParameterFile(CliParameter):
         )
 
 
-class CliRunner:
+# TODO: Pull this abstract base class out into its own separate file
+# once we have more than a single Runner subclass. This exists only
+# for type hinting right now
+class Runner(ABC):
+    """
+    Base class an object that can parse and run a configuration definition
+    """
+
+    @abstractmethod
+    def get_defaults(self):
+        pass
+
+
+class CliRunner(Runner):
     """
     Class that can parse and run a CLI configuration definition
     """
@@ -406,6 +498,26 @@ class CliRunner:
             return [self._command] + result
         else:
             raise ValueError(f"Could not generate a command line for '{self.name}'")
+
+    def get_defaults(self):
+        result: list[list[str, str | int | float]] = []
+        for parameter in self._parameters:
+            try:
+                if parameter.displayable:
+                    result.append(parameter.for_default_display())
+            except (ConfigDefinitionError, ConfigInputValueError) as e:
+                print(f"Value '{parameter._cli_parameter}' parseError: {e.args}")
+                if parameter.required:
+                    raise ValueError(
+                        f"Could not generate a default parameter for '{self.name}'"
+                    )
+
+        result = [list(entry) for entry in result if entry]
+
+        if len(result) > 0:
+            return result
+        else:
+            raise ValueError(f"Could not generate default parameters for '{self.name}'")
 
     def run(self, inputs: list[list], ui_inputs: dict[str, object]):
         subprocess.run(self.get_command(inputs, ui_inputs))
