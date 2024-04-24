@@ -48,6 +48,7 @@ footer {
 #outputgallery_gallery .fixed-height {
     /* min-height: 90vh !important; */
     min-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
+    max-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
 }
 
 .right-panel {
@@ -71,6 +72,53 @@ footer {
 }
 
 /* output gallery tab, parameter info dataframe */
+
+#parameter_panel {
+    line-height: var(--line-xs);
+}
+
+#parameter_panel .gap, .parameter_row {
+    row-gap: 0px;
+    column-gap: 0px;
+}
+
+#parameter_panel .parameter_label {
+    border-radius: var(--block-radius) 0px 0px var(--block-radius);
+}
+
+#parameter_panel .parameter_label, .parameter_label input {
+    border-style: none;
+    background-color: var(--background-fill-secondary);
+}
+
+#parameter_panel .parameter_value {
+    border-radius: 0px var(--block-radius) var(--block-radius) 0px;
+}
+
+/* we don't use :last-child() for the following selectors as it doesn't
+   do what we want if we have other children of the parent that
+   aren't .parameter_row
+*/
+
+/* parameter_label, in a parameter_row that has a parameter_row after it */
+#parameter_panel .parameter_row:has(~ .parameter_row) .parameter_label {
+    border-width: 1px 0px 0px 1px !important;
+}
+
+/* parameter_label, in a parameter_row that doesn't have a parameter_row after it */
+#parameter_panel .parameter_row:not(:has(~ .parameter_row)) .parameter_label {
+    border-width: 1px 0px 1px 1px !important;
+}
+
+/* parameter_value, in a parameter_row that has a parameter_row after it */
+#parameter_panel .parameter_row:has(~ .parameter_row) .parameter_value {
+    border-width: 1px 1px 0px 0px !important;
+}
+
+/* parameter_value, in a parameter_row that doesn't have a parameter_row after it */
+#parameter_panel .parameter_row:not(:has(~ .parameter_row)) .parameter_value {
+    border-width: 1px 1px 1px 0px !important;
+}
 
 .output_parameters_dataframe tbody td {
     /* make more compact */

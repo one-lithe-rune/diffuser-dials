@@ -146,6 +146,11 @@
             "default": "euler_a karras"
         },
         {
+            "class": "display",
+            "source": "Version",
+            "default": ""
+        },
+        {
             "class": "value",
             "cli_parameter": "--rng",
             "source": "RNG",
