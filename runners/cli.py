@@ -6,6 +6,7 @@ import time
 
 import sys
 import inspect
+from config.args import args
 
 from abc import (
     ABC,
@@ -330,6 +331,12 @@ class CliParameterFile(CliParameter):
         )
         self._generate = entry.get("generate", None)
 
+        default_source = entry.get("default_from_arg", None)
+        self._default_file = (
+            args.__dict__[default_source] if default_source in args.__dict__ else None
+        )
+        self._force_default = entry.get("force_default", False)
+
     def for_default_display(self):
         """If displayable answers the first file name, matching the first
         extension in folder specified by base_path. Other wise"""
@@ -350,7 +357,13 @@ class CliParameterFile(CliParameter):
             except OSError:
                 files = []
 
-            return (self._display_source, Path(files[0]).name if len(files) > 0 else "")
+            print(self._default_file)
+            if self._default_file in [Path(file).name for file in files]:
+                return (self._display_source, self._default_file)
+            elif self._force_default and len(files) > 0:
+                return (self._display_source, Path(files[0]).name)
+            else:
+                return (self._display_source, "")
 
         return ()
 

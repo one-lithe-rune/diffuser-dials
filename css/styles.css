@@ -45,10 +45,15 @@ footer {
 }
 
 /* output gallery tab */
-#outputgallery_gallery .fixed-height {
+#gallery-panel .fixed-height {
     /* min-height: 90vh !important; */
     min-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
     max-height: calc(100vmin - var(--size-20) - var(--size-6)) !important;
+}
+
+#gallery-panel {
+    max-width: calc(100vmin - var(--size-20) - var(--size-6)) !important;
+    min-width: calc(100vmin - var(--size-20) - var(--size-6)) !important;
 }
 
 .right-panel {

@@ -99,7 +99,9 @@ with gr.Blocks() as outputgallery:
         gallery_files = gr.State(value=[])
         subdirectory_paths = gr.State(value=output_subdirs())
 
-        with gr.Column(scale=6, min_width=640):
+        with gr.Column(
+            elem_id="gallery-panel",
+        ):
             logo = gr.Image(
                 label="No Images",
                 value=app_logo,
@@ -119,7 +121,7 @@ with gr.Blocks() as outputgallery:
                 object_fit="contain",
             )
 
-        with gr.Column(scale=4, elem_classes=["right-panel"], min_width=240):
+        with gr.Column(elem_classes=["right-panel"], min_width=240):
             with gr.Group():
                 with gr.Row(elem_id="output_subdir_container"):
                     with gr.Column(
