@@ -46,8 +46,8 @@ def parse_generation_parameters(x: str):
     # Some backends have parameters that others put in the prompt
     # if they support them
     lora = res.get("LoRA", None)
-    if lora is not None:
-        res["Prompt"] = " ".join(res["Prompt"], f"<lora:{lora}>")
+    if lora is not None and lora != "None":
+        res["Prompt"] = " ".join([res["Prompt"], f"<lora:{lora}>"])
 
     hypernet = res.get("Hypernet", None)
     if hypernet is not None:

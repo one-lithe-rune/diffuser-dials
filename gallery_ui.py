@@ -96,7 +96,7 @@ with gr.Blocks() as outputgallery:
         # https://github.com/gradio-app/gradio/issues/2907
         dev_null = gr.Textbox("", visible=False)
 
-        gallery_files = gr.State(value=[])
+        gallery_files = gr.State(value=outputgallery_filenames("."))
         subdirectory_paths = gr.State(value=output_subdirs())
 
         with gr.Column(
@@ -107,7 +107,7 @@ with gr.Blocks() as outputgallery:
                 value=app_logo,
                 interactive=False,
                 show_download_button=False,
-                visible=True,
+                visible=len(gallery_files.value) == 0,
                 show_label=True,
                 elem_id="top_logo",
                 elem_classes="logo_centered",
@@ -115,7 +115,7 @@ with gr.Blocks() as outputgallery:
             gallery = gr.Gallery(
                 label="",
                 value=gallery_files.value,
-                visible=False,
+                visible=len(gallery_files.value) > 0,
                 show_label=True,
                 columns=2,
                 object_fit="contain",
@@ -132,7 +132,7 @@ with gr.Blocks() as outputgallery:
                             label=f"Subdirectories of {output_dir}",
                             type="value",
                             choices=subdirectory_paths.value,
-                            value="",
+                            value=".",
                             interactive=True,
                             # elem_classes="dropdown_no_container",
                             allow_custom_value=True,
