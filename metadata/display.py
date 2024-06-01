@@ -31,6 +31,12 @@ def compact(metadata: dict) -> dict:
     if (result.keys() & {"LoRA"}) and (not result["LoRA"] or result["LoRA"] == "None"):
         result.pop("LoRA")
 
+    # assume safetensors is the default, so we don't need to include it as a suffix
+    if "Model" in result:
+        result["Model"] = result["Model"].removesuffix(".safetensors")
+    if "VAE" in result:
+        result["VAE"] = result["VAE"].removesuffix(".safetensors")
+
     return result
 
 

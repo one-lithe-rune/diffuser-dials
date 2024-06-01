@@ -100,6 +100,10 @@ footer {
     border-radius: 0px var(--block-radius) var(--block-radius) 0px;
 }
 
+#parameter_panel .parameter_dropdown .wrap-inner {
+    padding: 8px;
+}
+
 /* we don't use :last-child() for the following selectors as it doesn't
    do what we want if we have other children of the parent that
    aren't .parameter_row

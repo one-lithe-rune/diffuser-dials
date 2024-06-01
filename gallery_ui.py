@@ -15,7 +15,7 @@ import runners
 
 output_dir = paths.output_dir
 available_runners = runners.all()
-parameter_controls: list[gr.Textbox] = []
+parameter_controls: list[gr.Textbox | gr.Dropdown] = []
 
 
 def outputgallery_filenames(subdir) -> list[str]:
@@ -184,30 +184,35 @@ with gr.Blocks() as outputgallery:
                             elem_classes=["parameter_label"],
                             max_lines=1,
                         )
-                        parameter_controls.append(
-                            gr.Textbox(
-                                label=param[0],
-                                value=param[1],
-                                interactive=True,
-                                container=False,
-                                scale=6,
-                                elem_classes=["parameter_value"],
+                        print(f"param: {param}")
+                        if param[2] is not None:
+                            parameter_controls.append(
+                                gr.Dropdown(
+                                    label=param[0],
+                                    value=param[1],
+                                    interactive=True,
+                                    container=False,
+                                    scale=6,
+                                    elem_classes=[
+                                        "parameter_value",
+                                        "parameter_dropdown",
+                                    ],
+                                    choices=param[2],
+                                )
                             )
-                        )
 
-                image_parameters = gr.DataFrame(
-                    elem_classes=["output_parameters_dataframe"],
-                    height=600,
-                    headers=["Parameter", "Value"],
-                    datatype=["str", "str"],
-                    col_count=(2, "fixed"),
-                    row_count=(len(default_params), "fixed"),
-                    wrap=True,
-                    value=default_params,
-                    interactive=True,
-                    type="array",
-                    visible=False,
-                )
+                        else:
+                            parameter_controls.append(
+                                gr.Textbox(
+                                    label=param[0],
+                                    value=param[1],
+                                    interactive=True,
+                                    container=False,
+                                    scale=6,
+                                    elem_classes=["parameter_value"],
+                                )
+                            )
+
             with gr.Row(elem_classes=["end-fill"]):
                 with gr.Column(scale=3):
                     runner = gr.Dropdown(
@@ -420,13 +425,18 @@ with gr.Blocks() as outputgallery:
         for idx, control in enumerate(parameter_controls):
             input_dict[control.label] = params[idx]
 
-        try:
-            command = list(
-                available_runners[runner].get_command(input_dict, {"subdir": subdir})
-            )
-            subprocess.run(command)
-        except ValueError as e:
-            raise gr.Error(e)
+        command = list(
+            available_runners[runner].get_command(input_dict, {"subdir": subdir})
+        )
+        subprocess.run(command)
+
+        # try:
+        #     command = list(
+        #         available_runners[runner].get_command(input_dict, {"subdir": subdir})
+        #     )
+        #     subprocess.run(command)
+        # except ValueError as e:
+        #     raise gr.Error(e)
 
         return on_new_image(subdir)
 
