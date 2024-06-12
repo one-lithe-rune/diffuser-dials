@@ -184,7 +184,6 @@ with gr.Blocks() as outputgallery:
                             elem_classes=["parameter_label"],
                             max_lines=1,
                         )
-                        print(f"param: {param}")
                         if param[2] is not None:
                             parameter_controls.append(
                                 gr.Dropdown(

@@ -28,11 +28,6 @@ def ui() -> gr.Blocks:
 
 
 if __name__ == "__main__":
-    # allow direct serving of images from the outputdir if self-hosting
-    # TODO: Make this a separate non-default command line option
-    if args.host in ["localhost", "127.0.0.1", "::1"]:
-        gr.set_static_paths([paths.output_dir])
-
     ui().launch(
         share=False,
         server_name=args.host,
@@ -42,5 +37,6 @@ if __name__ == "__main__":
         show_api=False,
         inbrowser=True,
     )
+
 else:
     demo = ui()
