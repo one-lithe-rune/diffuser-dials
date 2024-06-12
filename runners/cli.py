@@ -6,6 +6,7 @@ import time
 
 import sys
 import inspect
+from config.args import args
 
 from abc import (
     ABC,
@@ -79,6 +80,7 @@ class CliParameter(ABC):
         """answer whether the parameter is required to have a value"""
         return self._required
 
+    @property
     def options(self) -> list[str | int | float] | None:
         """Answers a list of options that can be selected for this parametr or
         None if there is no specific list of options
@@ -89,7 +91,7 @@ class CliParameter(ABC):
         """Answers a tuple to include in the parameters to display as default
         when no image is selected"""
         if self._displayable:
-            return (self._display_source, self._default)
+            return (self._display_source, self._default, self.options)
         else:
             return ()
 
@@ -133,7 +135,7 @@ class CliParameterDisplay:
     def for_default_display(self):
         """Answers a tuple to include in the parameters to display as default
         when no image is selected"""
-        return (self._source, self._default)
+        return (self._source, self._default, None)
 
     def for_cli(
         self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
@@ -164,6 +166,10 @@ class CliParameterValue(CliParameter):
         self._type = entry.get("type", None)
         self._one_of = entry.get("one_of", None)
         self._range = entry.get("range", None)
+
+    @property
+    def options(self):
+        return self._one_of
 
     def check_type(self, value: str | int | float) -> str | int | float:
         try:
@@ -330,6 +336,12 @@ class CliParameterFile(CliParameter):
         )
         self._generate = entry.get("generate", None)
 
+        default_source = entry.get("default_from_arg", None)
+        self._default_file = (
+            args.__dict__[default_source] if default_source in args.__dict__ else None
+        )
+        self._force_default = entry.get("force_default", False)
+
     def for_default_display(self):
         """If displayable answers the first file name, matching the first
         extension in folder specified by base_path. Other wise"""
@@ -346,11 +358,20 @@ class CliParameterFile(CliParameter):
 
             regex = re.compile(fnmatch.translate(str(glob)), re_flag)
             try:
-                files = [file for file in os.listdir(str(path)) if regex.match(file)]
+                files = [
+                    Path(file).stem
+                    for file in os.listdir(str(path))
+                    if regex.match(file)
+                ]
             except OSError:
                 files = []
 
-            return (self._display_source, Path(files[0]).name if len(files) > 0 else "")
+            if self._default_file and Path(self._default_file).stem in files:
+                return (self._display_source, Path(self._default_file).stem, files)
+            elif self._force_default and len(files) > 0:
+                return (self._display_source, files[0], files)
+            else:
+                return (self._display_source, "", [""] + files)
 
         return ()
 
@@ -384,8 +405,9 @@ class CliParameterFile(CliParameter):
         if self._extensions is not None and (
             result.suffix == "" or result.suffix.lower() not in self._extensions
         ):
-            result = result.with_suffix(self._extensions[0].removeprefix("."))
+            result = result.with_suffix(f".{self._extensions[0].removeprefix('.')}")
 
+        print(f"path: {result}")
         # check path exists
         path = result.parent
         if not path.exists():

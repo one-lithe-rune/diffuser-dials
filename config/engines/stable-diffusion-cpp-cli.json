@@ -60,6 +60,8 @@
             "source": "Model",
             "base_path": "$checkpoints",
             "extensions": ["safetensors"],
+            "default_from_arg": "default_model",
+            "force_default": true,
             "required": true,
             "displayable": true
         },
@@ -68,6 +70,8 @@
             "cli_parameter": "--vae",
             "source": "VAE",
             "base_path": "$vaes",
+            "default_from_arg": "default_vae",
+            "force_default": false,
             "extensions": ["safetensors"],
             "displayable": true
         },
@@ -144,6 +148,11 @@
             "class": "display",
             "source": "Sampler",
             "default": "euler_a karras"
+        },
+        {
+            "class": "display",
+            "source": "Version",
+            "default": ""
         },
         {
             "class": "value",

@@ -15,6 +15,7 @@ import runners
 
 output_dir = paths.output_dir
 available_runners = runners.all()
+parameter_controls: list[gr.Textbox | gr.Dropdown] = []
 
 
 def outputgallery_filenames(subdir) -> list[str]:
@@ -65,6 +66,26 @@ def get_default_params(runner: runners.Runner = None) -> list[list]:
         return list(available_runners.items())[0][1].get_defaults()
 
 
+def param_control_value(control_values: list[str], param_key: str):
+    result = control_values[
+        [control.label.lower() for control in parameter_controls].index(
+            param_key.lower()
+        )
+    ]
+    return result
+
+
+def parameter_control_updates(update_values: dict[str, str]):
+    result = []
+    for control in parameter_controls:
+        if control.label.lower() in update_values:
+            result.append(update_values[control.label.lower()])
+        else:
+            result.append(gr.Textbox())
+
+    return result
+
+
 # --- Define UI layout for Gradio
 
 with gr.Blocks() as outputgallery:
@@ -75,16 +96,18 @@ with gr.Blocks() as outputgallery:
         # https://github.com/gradio-app/gradio/issues/2907
         dev_null = gr.Textbox("", visible=False)
 
-        gallery_files = gr.State(value=[])
+        gallery_files = gr.State(value=outputgallery_filenames("."))
         subdirectory_paths = gr.State(value=output_subdirs())
 
-        with gr.Column(scale=6, min_width=640):
+        with gr.Column(
+            elem_id="gallery-panel",
+        ):
             logo = gr.Image(
                 label="No Images",
                 value=app_logo,
                 interactive=False,
                 show_download_button=False,
-                visible=True,
+                visible=len(gallery_files.value) == 0,
                 show_label=True,
                 elem_id="top_logo",
                 elem_classes="logo_centered",
@@ -92,13 +115,13 @@ with gr.Blocks() as outputgallery:
             gallery = gr.Gallery(
                 label="",
                 value=gallery_files.value,
-                visible=False,
+                visible=len(gallery_files.value) > 0,
                 show_label=True,
                 columns=2,
                 object_fit="contain",
             )
 
-        with gr.Column(scale=4, elem_classes=["right-panel"], min_width=240):
+        with gr.Column(elem_classes=["right-panel"], min_width=240):
             with gr.Group():
                 with gr.Row(elem_id="output_subdir_container"):
                     with gr.Column(
@@ -109,7 +132,7 @@ with gr.Blocks() as outputgallery:
                             label=f"Subdirectories of {output_dir}",
                             type="value",
                             choices=subdirectory_paths.value,
-                            value="",
+                            value=".",
                             interactive=True,
                             # elem_classes="dropdown_no_container",
                             allow_custom_value=True,
@@ -147,21 +170,49 @@ with gr.Blocks() as outputgallery:
             )
 
             with gr.Accordion(
-                label="Parameter Information", open=True
+                label="Parameter Information", open=True, elem_id="parameter_panel"
             ) as parameters_accordian:
-                default_params = get_default_params()
-                image_parameters = gr.DataFrame(
-                    elem_classes=["output_parameters_dataframe"],
-                    height=600,
-                    headers=["Parameter", "Value"],
-                    datatype=["str", "str"],
-                    col_count=(2, "fixed"),
-                    row_count=(len(default_params), "fixed"),
-                    wrap=True,
-                    value=default_params,
-                    interactive=True,
-                    type="array",
-                )
+                default_params = get_default_params()  # Get default parameters
+
+                for param in default_params:
+                    with gr.Row(elem_classes=["parameter_row"]):
+                        gr.Textbox(
+                            value=param[0],
+                            interactive=False,
+                            container=False,
+                            scale=1,
+                            elem_classes=["parameter_label"],
+                            max_lines=1,
+                        )
+                        print(f"param: {param}")
+                        if param[2] is not None:
+                            parameter_controls.append(
+                                gr.Dropdown(
+                                    label=param[0],
+                                    value=param[1],
+                                    interactive=True,
+                                    container=False,
+                                    scale=6,
+                                    elem_classes=[
+                                        "parameter_value",
+                                        "parameter_dropdown",
+                                    ],
+                                    choices=param[2],
+                                )
+                            )
+
+                        else:
+                            parameter_controls.append(
+                                gr.Textbox(
+                                    label=param[0],
+                                    value=param[1],
+                                    interactive=True,
+                                    container=False,
+                                    scale=6,
+                                    elem_classes=["parameter_value"],
+                                )
+                            )
+
             with gr.Row(elem_classes=["end-fill"]):
                 with gr.Column(scale=3):
                     runner = gr.Dropdown(
@@ -301,30 +352,16 @@ with gr.Blocks() as outputgallery:
         # evt.index is an index into the full list of filenames for
         # the current subdirectory
         filename = images[evt.index]
-        params = displayable_metadata(filename)
+        params: dict[str, str] = {
+            k.lower(): v
+            for k, v in displayable_metadata(filename)["parameters"].items()
+        }
 
-        if params:
-            if params["source"] == "missing":
-                return [
-                    "Could not find this image file, refresh the gallery and update the images",
-                    [["Status", "File missing"]],
-                ]
-            else:
-                return [
-                    filename,
-                    gr.DataFrame(
-                        value=list(map(list, params["parameters"].items())),
-                        row_count=(len(params["parameters"]), "fixed"),
-                    ),
-                ]
+        result = []
+        for control in parameter_controls:
+            result.append(gr.Textbox(value=params.get(control.label.lower(), "")))
 
-        return [
-            filename,
-            gr.DataFrame(
-                value=default_params(runner),
-                row_count=(1, "fixed"),
-            ),
-        ]
+        return [filename] + result
 
     def on_outputgallery_filename_change(filename: str) -> list:
         exists = filename != "None" and os.path.exists(filename)
@@ -367,10 +404,9 @@ with gr.Blocks() as outputgallery:
                 gr.update(),
             )
 
-    def on_click_update_seed(seed_type, params):
-        input_dict = dict(params)
+    def on_click_update_seed(seed_type, *params):
         try:
-            seed = int(input_dict["Seed"])
+            seed = int(param_control_value(params, "seed"))
         except (KeyError, ValueError):
             seed = -1
 
@@ -381,21 +417,26 @@ with gr.Blocks() as outputgallery:
         elif seed_type == "Previous seed" and not (int(seed) < 0):
             seed = int(seed) - 1
 
-        input_dict["Seed"] = seed
+        return parameter_control_updates({"seed": seed})
 
-        return [[key, value] for key, value in input_dict.items()]
+    def on_click_run_command(runner, subdir, *params):
+        input_dict = {}
 
-    def on_click_run_command(runner, subdir, params):
-        input_dict = dict(params)
+        for idx, control in enumerate(parameter_controls):
+            input_dict[control.label] = params[idx]
 
-        try:
-            command = list(
-                available_runners[runner].get_command(input_dict, {"subdir": subdir})
-            )
-            print(command)
-            subprocess.run(command)
-        except ValueError as e:
-            raise gr.Error(e)
+        command = list(
+            available_runners[runner].get_command(input_dict, {"subdir": subdir})
+        )
+        subprocess.run(command)
+
+        # try:
+        #     command = list(
+        #         available_runners[runner].get_command(input_dict, {"subdir": subdir})
+        #     )
+        #     subprocess.run(command)
+        # except ValueError as e:
+        #     raise gr.Error(e)
 
         return on_new_image(subdir)
 
@@ -439,18 +480,18 @@ with gr.Blocks() as outputgallery:
     gallery.select(
         on_select_image,
         [gallery_files, runner],
-        [outputgallery_filename, image_parameters],
+        [outputgallery_filename] + parameter_controls,
         queue=False,
     )
 
     run_command.click(
         on_click_update_seed,
-        inputs=[seed_type, image_parameters],
-        outputs=[image_parameters],
+        inputs=[seed_type] + parameter_controls,
+        outputs=parameter_controls,
         queue=False,
     ).then(
         on_click_run_command,
-        inputs=[runner, subdirectories, image_parameters],
+        inputs=[runner, subdirectories] + parameter_controls,
         outputs=[
             gallery_files,
             gallery,

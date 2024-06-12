@@ -18,6 +18,8 @@ defaults = {
     "followlinks": True,
     "output_dir": str(user_pictures_dir()),
     "models": str(user_documents_path() / "models"),
+    "default_model": None,
+    "default_vae": None,
     "checkpoints": None,
     "vaes": None,
     "loras": None,
@@ -28,9 +30,12 @@ defaults = {
 if (user_config_path(APP_NAME) / "config.json").exists():
     with open(user_config_path(APP_NAME) / "config.json") as config:
         try:
-            defaults = json.load(config)
+            loaded_defaults = json.load(config)
         except json.JSONDecodeError:
             print("Could not parse config file, skipping")
+
+        defaults.update(loaded_defaults)
+
 
 # --- Command line arguments ---
 parser = argparse.ArgumentParser()
@@ -67,15 +72,15 @@ parser.add_argument(
 
 # whether to update the saved config based on argument settings
 parser.add_argument(
-    "--update_config",
+    "--update-config",
     default=False,
-    action="store_false",
+    action="store_true",
     help="whether to update the saved config to these command line settings",
 )
 
 # base directory to place generated images
 parser.add_argument(
-    "--output_dir",
+    "--output-dir",
     default=defaults["output_dir"],
     help="output folder to put generated images",
 )
@@ -85,6 +90,18 @@ parser.add_argument(
     "--models",
     default=defaults["models"],
     help="parent folder of subfolders for checkpoints, vaes, loras, and embeddings",
+)
+
+parser.add_argument(
+    "--default-model",
+    default=defaults["default_model"],
+    help="default model to use if the image has no model value set",
+)
+
+parser.add_argument(
+    "--default-vae",
+    default=defaults["default_vae"],
+    help="default vae to use if the image has no VAE value set",
 )
 
 parser.add_argument(
