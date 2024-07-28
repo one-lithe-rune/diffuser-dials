@@ -4,6 +4,27 @@ re_param_code = r'\s*([\w ]+):\s*("(?:\\"[^,]|\\"|\\|[^\"])+"|[^,]*)(?:,|$)'
 re_param = re.compile(re_param_code)
 re_imagesize = re.compile(r"^(\d+)x(\d+)$")
 
+# Translating samplers between backends is tricky
+# these are unlikely to be 100% correct
+DIFFUSER_SAMPLERS = {
+    "PNDM": "pndm",
+    "HeunDiscrete": "heun discrete",
+    "DDIM": "ddim",
+    "DDPM": "ddpm",
+    "EulerDiscrete": "euler discrete",
+    "EulerAncestralDiscrete": "euler_a discrete",
+    "SharkEulerDiscrete": "euler discrete",
+    "SharkEulerAncestralDiscrete": "euler_a discrete",
+    "LCMScheduler": "lcm",
+    "DPMSolverMultistep": "dpm++2m",
+    "DPMSolverMultistepKarras": "dpm++2m karras",
+    "DPMSolverMultistep++": "dpm++2mv2 discrete",
+    "DPMSolverMultistepKarras++": "dpm++2mv2 karras",
+    "DPMSolverSDE": "dpm++2s_a discrete",
+    "DPMSolverSDEKarras": "dpm++2s_a karras",
+    "KDPM2DiscreteScheduler": "dpm discrete",
+}
+
 
 def parse_generation_parameters(x: str):
     res = {}
@@ -42,6 +63,11 @@ def parse_generation_parameters(x: str):
     # Add a placeholders for parameters that might be missing
     res["Clip skip"] = res.get("Clip skip", None)
     res["VAE"] = res.get("VAE", "")
+
+    # attempt to make sampler names consistent
+    sampler = res.get("Sampler", None)
+    if sampler is not None and sampler in DIFFUSER_SAMPLERS:
+        res["Sampler"] = DIFFUSER_SAMPLERS[sampler]
 
     # Some backends have parameters that others put in the prompt
     # if they support them
