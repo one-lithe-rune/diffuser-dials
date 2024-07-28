@@ -1,22 +1,24 @@
-# ![a logo of rotatable black knob with orange and blue edges around its circumferance](./images/logo-very-small.png) &nbsp; Diffuser Dials 
+# ![a logo of rotatable black knob with orange and blue edges around its circumferance](./images/logo-very-small.png) &nbsp; Diffuser Dials
 
 ## Motivation
 
-My medium term aim, in this repo, is make a UI application for Stable Diffusion image generation backends that **doesn't** include those backends themselves. Instead making it able to talk to various different ones, including those with [A1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) compatible REST APIs, generation run through raw Python scripts such as [Diffusers](https://github.com/huggingface/diffusers) or [SHARK-Turbine](https://github.com/nod-ai/SHARK-Turbine), or by running console applications like [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp), or calling shared library functions (probably stable-diffusion.cpp again)
+My medium term aim, in this repo, is make a UI application for Stable Diffusion image generation backends that **doesn't** include those backends themselves. Instead making it able to talk to various different ones, including those with [A1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) compatible REST APIs, generation run through raw Python scripts such as [Diffusers](https://github.com/huggingface/diffusers) or [SHARK-Turbine](https://github.com/nod-ai/SHARK-Turbine).
 
-For now this is mostly just some of the User Interface code I have contributed to [SHARK](https://github.com/nod-ai/SHARK) pulled out into its own Python application, because I would like to use it for not-SHARK stuff and apparently I have terminal [NIH](https://en.wikipedia.org/wiki/Not_invented_here) syndrome. 
+Currently the interface for this is some code I have contributed to [SHARK](https://github.com/nod-ai/SHARK) pulled out into its own Python application, because I would like to use it for not-SHARK stuff and apparently I have terminal [NIH](https://en.wikipedia.org/wiki/Not_invented_here) syndrome.
 
-**Currently this applictions doesn't do anything other than let you look at images you might already on your system from your web browser.**
+At the moment the application as a whole only supports using [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) and only for text to image. So you'll need that on your path somewhere if you want anything generation-y to happen.
 
 ## Requirements
 
-I'm currently working on this on Linux, using Python 3.11.  Those are your best bets, but it *should* work on Windows and Mac, however getting it setup on those is left as an exercise for the reader, and I haven't tested those.
+I'm currently working on this on Linux, using Python 3.11.  Those are your best bets, but it *should* work on Windows and Mac, however getting it setup on those is left as an exercise for the reader, and I haven't tested them.
 
 I don't have much idea about other Python versions atm. Sorry.
 
+And you'll need both [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) and a suitable stable-diffusion model checkpoint in safetensors format from [Huggingface](https://huggingface.co/runwayml/stable-diffusion-v1-5), [Civitai](https://civitai.com/) or similar.
+
 ## Setup and Usage (Linux)
 
-Unless you have an attachment to the [SHARK](https://github.com/nod-ai/SHARK) output gallery UI, you probably don't want to use this in the current state. But if you're feeling brave or curious, after cloning the repo,  create a suitable virtual environment:
+If you're feeling brave or curious enough to try this, grab [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp) build it and put it on your path, then clone this repo, and create create a suitable virtual environment:
 
 ```bash
 # Make sure you are in the folder you cloned the repo to
@@ -44,23 +46,25 @@ python ./diffuser-dials.py --help
 python ./diffuser-dials.py
 ```
 
-## Tentative Starting Roadmap
-- [ ] Report Gradio bugs.
-- [ ] Option to launch the web browser (default?).
-- [ ] Fix 'Open Folder' Request checking.
-- [ ] Initial backend config system.
-- [ ] Config for [stable-diffusion-cpp](https://github.com/leejet/stable-diffusion.cpp) CLI.
-- [ ] An actual Txt2Img generation button. That generates.
-- [ ] Settings tab.
+## (Very) vague roadmap
+
+- [ ] Settings tab
+  - [ ] Command line arguments in the UI
+  - [ ] Backend config.
+  - [ ] Model configs.
+- [ ] Support more backends than [stable-diffusion.cpp](https://github.com/leejet/stable-diffusion.cpp).
+- [ ] Multiple root folders (or similar).
+- [ ] Prompt templating.
+
 
 ## Contributing
 
-At the moment I'm still working on the core stuff, so I don't have things set up so there are obvious attachment points. But throw up a PR if you're feeling eager, or you have a bug fix. I'll probably want to get things in a better state before trying to merge anything big, but maybe your feature is super cool!
+Throw up a PR if you're feeling eager, or you have a bug fix. I'll probably want to get things in a better state before trying to merge anything big, but maybe your feature is super cool!
 
 ## Copyright
 
     Copyright 2024 Stefan Kapusniak and CONTRIBUTERS (see accompanying file)
-    
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -74,12 +78,11 @@ At the moment I'm still working on the core stuff, so I don't have things set up
     limitations under the License.
 
 ## Additional Notice and Attributions
-    
-    Some parts derived from code by other NodAI/SHARK contributers originally 
-    licensed under the Apache License Version 2.0 with LLVM exception. 
-    
-    See: 
+
+    Some parts derived from code by other NodAI/SHARK contributers originally
+    licensed under the Apache License Version 2.0 with LLVM exception.
+
+    See:
     https://github.com/nod-ai/SHARK
     https://github.com/nod-ai/SHARK/graphs/contributors
-    
-    
+
