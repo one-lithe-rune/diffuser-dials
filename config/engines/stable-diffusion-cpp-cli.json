@@ -140,7 +140,8 @@
             "regex": "\\b\\S+\\s+(\\S+)",
             "one_of": [
                 "discrete",
-                "karras"
+                "karras",
+                "ays"
             ],
             "displayable": false
         },
