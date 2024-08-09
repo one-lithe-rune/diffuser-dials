@@ -147,7 +147,33 @@
         {
             "class": "display",
             "source": "Sampler",
-            "default": "euler_a karras"
+            "default": "euler_a karras",
+            "one_of": [
+                "euler",
+                "euler karras",
+                "euler ays",
+                "euler_a",
+                "euler_a karras",
+                "euler_a ays",
+                "heun",
+                "heun karras",
+                "heun ays",
+                "dpm2",
+                "dpm2 karras",
+                "dpm2 ays",
+                "dpm++2s_a",
+                "dpm++2s_a karras",
+                "dpm++2s_a ays",
+                "dpm++2m",
+                "dpm++2m karras",
+                "dpm++2m ays",
+                "dpm++2mv2",
+                "dpm++2mv2 karras",
+                "dpm++2mv2 ays",
+                "lcm",
+                "lcm karras",
+                "lcm ays"
+            ]
         },
         {
             "class": "display",
