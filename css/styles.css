@@ -76,6 +76,10 @@ footer {
     background: var(--block-background-fill);
 }
 
+#output_subdir_container .align_bottom .container {
+    margin-top: 28px;
+}
+
 /* output gallery tab, parameter info dataframe */
 
 #parameter_panel {
@@ -102,6 +106,10 @@ footer {
 
 #parameter_panel .parameter_dropdown .wrap-inner {
     padding: 8px;
+}
+
+.control_label input {
+    border-style: none;
 }
 
 /* we don't use :last-child() for the following selectors as it doesn't

@@ -33,7 +33,7 @@ if __name__ == "__main__":
         server_name=args.host,
         server_port=args.port,
         favicon_path=paths.images / "logo-icon.png",
-        allowed_paths=[paths.output_dir],
+        allowed_paths=paths.output_dir,
         show_api=False,
         inbrowser=True,
     )

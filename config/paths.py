@@ -21,7 +21,9 @@ class AppPaths:
         self.container_stylesheet: Path = self.css / "container_styles.css"
         self.workarounds: Path = self.js / "workarounds.js"
         self.config_dir: Path = Path(app_arguments.config_dir)
-        self.output_dir: Path = Path(app_arguments.output_dir)
+        self.output_dir: Path = [
+            dir for dir in app_arguments.output_dir if Path(dir).is_dir()
+        ]
         self.engine_config_dirs: list[Path] = [
             self.config_dir / "engines",
             self.resources / "config" / "engines",
@@ -45,7 +47,8 @@ class AppPaths:
         )
 
     def for_placeholder(
-        self, placeholder: Literal["$checkpoints", "$vaes", "$loras", "$embeddings"]
+        self,
+        placeholder: Literal["$checkpoints", "$vaes", "$loras", "$embeddings"],
     ):
         """Return the path corresponding to a placeholder string"""
         match placeholder:

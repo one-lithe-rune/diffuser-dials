@@ -13,10 +13,11 @@ print(f"\nStarting {APP_TITLE}...")
 # --- Defaults for the arguments ---
 
 defaults = {
+    "config_version": 1.0,
     "host": "localhost",
     "port": 8098,
     "followlinks": True,
-    "output_dir": str(user_pictures_dir()),
+    "output_dir": [str(user_pictures_dir())],
     "models": str(user_documents_path() / "models"),
     "default_model": None,
     "default_vae": None,
@@ -34,8 +35,19 @@ if (user_config_path(APP_NAME) / "config.json").exists():
         except json.JSONDecodeError:
             print("Could not parse config file, skipping")
 
-        defaults.update(loaded_defaults)
+        # migrations
+        # to version 1.0
+        # if "config_version" not in loaded_defaults:
+        #    if "output_dir" in loaded_defaults:
+        #        loaded_defaults["output_dir"] = [loaded_defaults["output_dir"]]
+        #    loaded_defaults["config_version"] = 1.0
 
+        # doing this with defaults.update turns lists into lists of lists
+        for key in defaults:
+            if key in loaded_defaults:
+                defaults[key] = loaded_defaults[key]
+
+        print(f"defaults: {defaults}")
 
 # --- Command line arguments ---
 parser = argparse.ArgumentParser()
@@ -81,8 +93,9 @@ parser.add_argument(
 # base directory to place generated images
 parser.add_argument(
     "--output-dir",
-    default=defaults["output_dir"],
-    help="output folder to put generated images",
+    nargs="*",
+    # default=defaults["output_dir"],
+    help="output folders to put generated images",
 )
 
 # base directory for retrieving models
@@ -129,6 +142,9 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+print(f"args: {args}")
+if args.output_dir is None:
+    args.output_dir = defaults["output_dir"]
 paths = AppPaths(args)
 
 print("\nUsing configuration settings:")
