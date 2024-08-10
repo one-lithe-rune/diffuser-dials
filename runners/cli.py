@@ -52,7 +52,7 @@ class CliParameter(ABC):
         self._displayable = entry.get("displayable", True)
         self._editable = entry.get("editable", True)
         try:
-            self._cli_parameter = entry["cli_parameter"]
+            self._cli_parameter = entry.get("cli_parameter", None)
         except KeyError:
             raise ConfigDefinitionError(
                 f"The config entry {entry} is missing a 'cli_parameter' property"
@@ -90,7 +90,7 @@ class CliParameter(ABC):
     def for_default_display(self) -> tuple[str, str | int | float]:
         """Answers a tuple to include in the parameters to display as default
         when no image is selected"""
-        if self._displayable:
+        if self.displayable and self._display_source:
             return (self._display_source, self._default, self.options)
         else:
             return ()
@@ -104,7 +104,7 @@ class CliParameter(ABC):
         pass
 
 
-class CliParameterDisplay:
+class CliParameterDisplay(CliParameter):
     """Class for Config Parameters that will be displayed but will not
     be directly passed to a the command line generation tool. Use this
     when you have extracted parameters and you want to display where they
@@ -115,12 +115,14 @@ class CliParameterDisplay:
         self._required = entry.get("required", False)
         self._default = entry.get("default", "")
         self._editable = entry.get("editable", True)
-        try:
-            self._source = entry["source"]
-        except KeyError:
-            raise ConfigDefinitionError(
-                f"The config entry {entry} is missing a 'source' property"
-            )
+        self._one_of = entry.get("one_of", None)
+        self._displayable = True
+        self._display_source = entry.get("source", None)
+        self._source = self._display_source.lower()
+
+    @property
+    def options(self) -> list[str | int | float] | None:
+        return self._one_of
 
     @property
     def required(self) -> bool:
@@ -131,11 +133,6 @@ class CliParameterDisplay:
     def displayable(self) -> bool:
         """answer whether the parameter should be displayed in the UI"""
         return True
-
-    def for_default_display(self):
-        """Answers a tuple to include in the parameters to display as default
-        when no image is selected"""
-        return (self._source, self._default, None)
 
     def for_cli(
         self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
