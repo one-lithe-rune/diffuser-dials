@@ -13,6 +13,12 @@
             "displayable": false
         },
         {
+            "class": "hardcoded",
+            "cli_parameter": "--verbose",
+            "source": null,
+            "displayable": false
+        },
+        {
             "class": "value",
             "cli_parameter": "--prompt",
             "source": "Prompt",

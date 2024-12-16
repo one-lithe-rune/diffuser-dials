@@ -59,7 +59,11 @@ class CliParameter(ABC):
             )
         try:
             self._display_source = entry["source"]
-            self._source = self._display_source.lower()
+            self._source = (
+                self._display_source.lower()
+                if self._display_source
+                else self._display_source
+            )
         except KeyError:
             raise ConfigDefinitionError(
                 f"The config entry {entry} is missing a 'source' property"
@@ -146,10 +150,13 @@ class CliParameterHardCoded(CliParameter):
     def for_cli(
         self, input_parameters: dict[str, str], ui_inputs: dict[str, object]
     ) -> tuple[str, str]:
-        return (
-            self._cli_parameter,
-            self._source,
-        )
+        if self._source:
+            return (
+                self._cli_parameter,
+                self._source,
+            )
+        else:
+            return [self._cli_parameter]
 
 
 class CliParameterValue(CliParameter):
